@@ -115,7 +115,7 @@ class DenseRetriever:
     """
 
     def __init__(self, model_name: str = "intfloat/multilingual-e5-large", device: str = "cpu"):
-        from sentence_transformers import SentenceTransformer  # lazy import — optional dep
+        from sentence_transformers import SentenceTransformer  # type: ignore[import-untyped]
         self.model_name = model_name
         self.model = SentenceTransformer(model_name, device=device)
         self.corpus_embeddings: np.ndarray | None = None
@@ -174,7 +174,7 @@ class Reranker:
     """Cross-encoder reranker for re-scoring bi-encoder candidates (e.g. BGE-reranker-v2-m3)."""
 
     def __init__(self, model_name: str = "BAAI/bge-reranker-v2-m3", device: str = "cpu"):
-        from sentence_transformers import CrossEncoder  # lazy import — optional dep
+        from sentence_transformers import CrossEncoder  # type: ignore[import-untyped]
         self.model = CrossEncoder(model_name, device=device, max_length=512)
 
     def rerank(
