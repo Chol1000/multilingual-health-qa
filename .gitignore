@@ -1,0 +1,22 @@
+# Data files (download from Zindi)
+data/
+
+# Checkpoints and large model files
+outputs/checkpoints/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+*.swp
+
+# Secrets
+.env
