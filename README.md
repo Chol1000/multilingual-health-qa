@@ -110,6 +110,30 @@ Full details for every experiment, including per-language breakdowns, hyperparam
 
 ## 5. Key Results
 
+### Leaderboard Score Progression
+
+![Leaderboard Progression](outputs/figures/leaderboard_progression.png)
+
+### Experiment Comparison — All Submitted Runs
+
+![Results Comparison](outputs/figures/results_comparison.png)
+
+### Score Components (ROUGE-1, ROUGE-L, LLM-Judge) per Experiment
+
+![Score Components](outputs/figures/score_components.png)
+
+### Local Validation ROUGE-L vs Zindi Score
+
+![Local vs Zindi](outputs/figures/local_vs_zindi.png)
+
+### Per-Language ROUGE-1 Breakdown
+
+![Per-Language ROUGE](outputs/figures/per_language_rouge.png)
+
+### Training and Validation Loss Curves
+
+![Learning Curves](outputs/figures/learning_curves.png)
+
 | Exp | Method | ROUGE-1 | ROUGE-L | Zindi Score |
 |-----|--------|---------|---------|-------------|
 | 1 | TF-IDF Global (baseline) | 0.4276 | 0.3740 | 0.4945 |
@@ -191,8 +215,9 @@ Place `Train.csv`, `Val.csv`, `Test.csv`, and `SampleSubmission.csv` in the `dat
 
 ### Hardware Requirements
 
-- GPU: NVIDIA T4 (15 GB VRAM) or equivalent
-- Training time: approximately 2–3 hours per fine-tuning experiment on T4
+- **Training experiments (Exp 3–9, 16–17):** A100 GPU (40 GB VRAM) — required for fine-tuning NLLB-1.3B and larger batches
+- **Retrieval and demo (Exp 11–15):** T4 GPU (15 GB VRAM) — sufficient for dense retrieval and inference
+- Training time: approximately 2–3 hours per fine-tuning experiment on A100
 - BGE-M3 corpus encoding: approximately 11 minutes for 29,814 rows on T4
 
 ---
