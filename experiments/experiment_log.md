@@ -1,7 +1,8 @@
 # Experiment Log — Multilingual Health QA Challenge
 
-All experiments are evaluated on the full validation set (6,686 rows) using whitespace-tokenized ROUGE.
-Weighted score = ROUGE-1 × 0.37 + ROUGE-L × 0.37 + LLM-judge × 0.26 (LLM-judge estimated from val-set trends).
+All experiments evaluated on the full validation set (6,686 rows) using whitespace-tokenized ROUGE.  
+Weighted score = ROUGE-1 × 0.37 + ROUGE-L × 0.37 + LLM-judge × 0.26.  
+**⚠ Inflated:** Experiments marked as inflated had validation rows inside the retrieval corpus — local ROUGE is artificially high.
 
 ---
 
@@ -9,23 +10,19 @@ Weighted score = ROUGE-1 × 0.37 + ROUGE-L × 0.37 + LLM-judge × 0.26 (LLM-judg
 
 | Field | Value |
 |-------|-------|
-| Model | TF-IDF char 3-5 gram + Nearest Neighbors |
+| Model | TF-IDF char 3–5 gram + Nearest Neighbors |
 | Val ROUGE-1 | 0.4276 |
 | Val ROUGE-L | 0.3740 |
-| Weighted (no LLM) | 0.2966 |
-| Leaderboard | 0.4945 — R1=0.4819, RL=0.4046, LLM=0.6402 (rank 304) |
+| Zindi Score | 0.4945 (R1=0.4819, RL=0.4046, LLM=0.6402) |
+| Inflated | No |
 
-**What changed:** Established baseline using character n-gram TF-IDF retrieval across all languages
-with a single global index.
+**What changed:** Baseline using character n-gram TF-IDF across a single global index of all 29,815 training rows.
 
-**Why:** Fast lower bound; returns verbatim training answers which should have moderate ROUGE.
+**Why:** Fast lower bound returning verbatim training answers, which gives moderate ROUGE and LLM-judge since answers are factually correct and in the right language.
 
-**Outcome:** R1=0.4276 RL=0.3740 — strong baseline. TF-IDF with char 3-5 gram retrieves
-answers from the 29,815-row training pool. Because answers are verbatim training text,
-the LLM-judge score on Zindi should also be reasonable (factually accurate, right language).
+**Outcome:** R1=0.4276, RL=0.3740. Stronger than expected — char 3–5 grams work across all scripts (Latin, Ge'ez) without language-specific tokenization.
 
-**Insight:** Character n-grams work across all scripts without language-specific tokenization.
-A global 29,815-example pool gives dense coverage for all languages.
+**Insight:** A single global pool of 29,815 examples provides dense coverage; high-frequency health vocabulary overlaps across languages and scripts at the character level.
 
 ---
 
@@ -33,108 +30,81 @@ A global 29,815-example pool gives dense coverage for all languages.
 
 | Field | Value |
 |-------|-------|
-| Model | TF-IDF char 3-5 gram + per-language index |
+| Model | TF-IDF char 3–5 gram + per-language index |
 | Val ROUGE-1 | 0.4269 |
 | Val ROUGE-L | 0.3734 |
-| Weighted (no LLM) | 0.2961 |
-| Leaderboard | 0.4937 — R1=0.4784, RL=0.4009, LLM=0.6475 (rank 309) |
+| Zindi Score | 0.4937 (R1=0.4784, RL=0.4009, LLM=0.6475) |
+| Inflated | No |
 
 **Per-language breakdown:**
 
 | Language | n | ROUGE-1 | ROUGE-L |
 |----------|---|---------|---------|
-| Swahili  | 518 | 0.603 | 0.567 |
-| Luganda  | 846 | 0.516 | 0.493 |
-| English  | 3746 | 0.460 | 0.410 |
-| Akan     | 1114 | 0.283 | 0.167 |
-| Amharic  | 462 | 0.145 | 0.135 |
+| Swahili | 518 | 0.603 | 0.567 |
+| Luganda | 846 | 0.516 | 0.493 |
+| English | 3,746 | 0.460 | 0.410 |
+| Akan | 1,114 | 0.283 | 0.167 |
+| Amharic | 462 | 0.145 | 0.135 |
 
-**What changed:** Separate TF-IDF index per language (5 indexes total + global fallback).
+**What changed:** Separate TF-IDF index per language (5 indexes + global fallback).
 
-**Why:** Isolating each language should avoid cross-script noise.
+**Why:** Isolating scripts should eliminate cross-language noise.
 
-**Outcome:** Exp 2 is marginally LOWER than Exp 1 overall (R1 −0.0007, RL −0.0006).
-Counter to hypothesis. Explanation: English dominates val set (3,746/6,686 = 56% of rows);
-the global index gives English queries access to the full 29,815-row pool vs the
-per-language English sub-pool of ~13,062 rows, providing denser nearest-neighbor coverage.
-Amharic is extremely weak (0.145/0.135) — Ge'ez script has unique character n-grams with
-almost no overlap with Latin, Akan, or Luganda scripts, making char-level retrieval unreliable.
+**Outcome:** Marginally lower than Exp 1 overall (R1 −0.0007). English dominates val set (56% of rows); global index gives English queries access to the full 29,815-row pool vs per-language sub-pool of ~13,062 rows. Amharic extremely weak (0.145) — Ge'ez script has unique character n-grams with almost no overlap with Latin scripts.
 
-**Insight:** For scripts that share character space (Latin-based: English, Luganda, Swahili, Akan),
-per-language retrieval helps. For Ge'ez (Amharic), neither approach works well without
-a language-dedicated model. Neural approaches (NLLB Amharic training) are essential.
+**Insight:** Per-language retrieval helps Latin-based languages but hurts overall due to English pool size reduction. Amharic requires a dedicated neural model regardless of retrieval strategy.
 
 ---
 
-## Experiment 3 — mT5-small Vanilla Fine-Tuning
-
-| Field | Value |
-|-------|-------|
-| Model | google/mt5-small (300M params) |
-| Prompt | `answer health question in {lang}: {question}` |
-| Epochs | 3 |
-| LR | 5e-5 |
-| Batch | 16 (effective) |
-| Train data | 5,000 samples (quick sanity check) |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
-
-**What changed:** First neural model; seq2seq generation instead of retrieval.
-
-**Why:** Establish minimum viable neural baseline; validate training pipeline end-to-end on Colab.
-
-**Outcome:** Expected lower ROUGE than mT5-base (fewer params, less training data).
-
-**Insight:** Even a small fine-tuned model may outperform TF-IDF on language-appropriate generation.
-
----
-
-## Experiment 4 — mT5-base Vanilla Fine-Tuning
+## Experiment 3 — mT5-base Vanilla Fine-Tuning (5k sample)
 
 | Field | Value |
 |-------|-------|
 | Model | google/mt5-base (580M params) |
 | Prompt | `answer health question in {lang}: {question}` |
 | Epochs | 3 |
-| LR | 5e-5 |
-| Batch | 32 (effective: 8 × grad_accum 4) |
-| Train data | 5,000-row sample (same as Exp 3 — architecture comparison) |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| LR | 5e-4 |
+| Train data | 5,000 samples |
+| Val ROUGE-1 | 0.1207 |
+| Val ROUGE-L | 0.1029 |
+| Zindi Score | Not submitted |
+| Inflated | No |
 
-**What changed:** Scaled from mT5-small to mT5-base on the same 5,000-row sample for a clean architecture comparison.
+**What changed:** First neural seq2seq model. Fine-tuned mT5-base on a 5k subsample to validate the training pipeline end-to-end on Colab T4.
 
-**Why:** mT5-base has 2× capacity and better multilingual coverage from mC4 pretraining.
+**Why:** Establish minimum viable neural baseline before scaling to full data.
 
-**Outcome:** Expected +5–10 ROUGE points over mT5-small.
+**Outcome:** R1=0.1207, RL=0.1029 — well below TF-IDF retrieval (0.4276). Expected: 5k samples is too small to learn diverse health domain answers across 5 languages. Model tends toward short generic outputs.
 
-**Insight:** Model scale significantly matters for low-resource language generation quality.
+**Insight:** Small fine-tuned models need far more training data to beat retrieval on a high-diversity generation task. Scaling to full data is essential.
 
 ---
 
-## Experiment 5 — mT5-base + Instructional Prompt (v2)
+## Experiment 4 — mT5-base + Instructional Prompt (5k sample)
 
 | Field | Value |
 |-------|-------|
 | Model | google/mt5-base |
-| Prompt | Long instructional (expert health framing) |
-| Other | Same as Exp 4 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Prompt | `"You are a health expert. Provide a comprehensive answer in {lang}..."` |
+| Epochs | 3 |
+| LR | 5e-4 |
+| Train data | 5,000 samples |
+| Val ROUGE-1 | 0.1231 |
+| Val ROUGE-L | 0.1065 |
+| Zindi Score | Not submitted |
+| Inflated | No |
 
-**What changed:** Replaced short prompt with a longer expert-framing instruction:
-`"You are a health expert. Answer the following question in {lang}..."`
+**What changed:** Replaced short prompt with a longer expert-framing instructional prompt.
 
-**Why:** More explicit task framing may improve generation quality and LLM-judge scores.
+**Why:** More explicit task framing may guide the model toward longer, more complete answers and improve LLM-judge scores.
 
-**Outcome:** Expected similar or slightly lower ROUGE-1/L (more tokens to process); potentially
-better LLM-judge scores due to more complete answers.
+**Outcome:** R1=0.1231, RL=0.1065 — marginal improvement over Exp 3 (+0.0024 R1). The longer prompt reduces effective answer token budget at max_input=256 tokens.
 
-**Insight:** Prompt length creates a trade-off: more context but fewer tokens for the answer.
+**Insight:** Prompt engineering has diminishing returns on small fine-tuned seq2seq models. The bottleneck is training data size, not prompt framing.
 
 ---
 
-## Experiment 6 — NLLB-200-distilled-600M Fine-Tuning
+## Experiment 5 — NLLB-600M Full Data Fine-Tuning
 
 | Field | Value |
 |-------|-------|
@@ -142,176 +112,312 @@ better LLM-judge scores due to more complete answers.
 | Language tokens | Per-row src_lang / tgt_lang / forced_bos_token_id |
 | Epochs | 3 |
 | LR | 5e-5 |
-| Batch | 32 (effective) |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.2890 |
+| Val ROUGE-L | 0.2216 |
+| Zindi Score | 0.3471 (R1=0.3457, RL=0.2508, LLM=0.4863) |
+| Inflated | No |
 
-**What changed:** Switched to Facebook's NLLB-200 model, specifically trained on 200 languages
-including Akan/Twi (twi_Latn), Luganda (lug_Latn), Amharic (amh_Ethi), and Swahili (swh_Latn).
+**What changed:** Switched to Facebook's NLLB-200 model trained on 200 languages with native support for Akan/Twi (twi_Latn), Luganda (lug_Latn), Amharic (amh_Ethi), and Swahili (swh_Latn). Used per-row language tokens.
 
-**Why:** mT5 treats all 101 languages equally from mC4 data quality; NLLB explicitly optimized
-for African languages with dedicated language tokens and specialized training objectives.
+**Why:** NLLB explicitly optimized for African languages; should outperform mT5 on Akan, Luganda, and Amharic.
 
-**Outcome:** Expected stronger performance on Akan, Luganda, and Amharic vs mT5-base.
-Inference is batched per-language group (bs=4) to keep throughput comparable to mT5.
+**Outcome:** R1=0.2890, RL=0.2216 — lower than TF-IDF baseline. NLLB generates fluent translations but the QA fine-tuning on health domain answers takes more epochs to converge with the language-conditioned generation mechanism.
 
-**Insight:** Specialized multilingual models outperform general ones when the task aligns with
-the model's training distribution. NLLB's dedicated Akan/Luganda/Amharic coverage is decisive.
+**Insight:** Specialized multilingual models need more careful hyperparameter tuning for seq2seq QA vs translation. LLM-judge=0.4863 reflects reasonable answer quality despite lower ROUGE.
 
 ---
 
-## Experiment 7 — mT5-base + LoRA (r=16)
-
-| Field | Value |
-|-------|-------|
-| Model | google/mt5-base + LoRA |
-| LoRA r | 16, alpha=32 |
-| Targets | Q, V attention matrices |
-| Epochs | 5 |
-| LR | 3e-4 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
-
-**What changed:** Applied LoRA (Parameter-Efficient Fine-Tuning) — trains only ~1% of parameters.
-
-**Why:** (1) Faster training, (2) less overfitting on low-resource languages like Amharic (1,845 samples),
-(3) enables more epochs within memory budget.
-
-**Outcome:** Expected competitive with full fine-tuning; advantage for Amharic.
-
-**Insight:** PEFT is especially valuable when some languages have very limited training data.
-
----
-
-## Experiment 8 — mT5-base + RAG Context
+## Experiment 6 — mT5-base + TF-IDF RAG (Full Data)
 
 | Field | Value |
 |-------|-------|
 | Model | google/mt5-base |
-| RAG | TF-IDF per-language top-1 retrieval |
+| RAG | TF-IDF per-language top-1 retrieval prepended as context |
 | Max input | 384 tokens |
 | Epochs | 3 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| LR | 5e-5 |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.3836 |
+| Val ROUGE-L | 0.3352 |
+| Zindi Score | 0.4356 (R1=0.4327, RL=0.3608, LLM=0.5460) |
+| Inflated | No |
 
-**What changed:** Added a retrieved training answer as context before the question.
+**What changed:** Full training data + TF-IDF context prepended as RAG grounding. Format: `Context: {retrieved_answer}\n\nAnswer health question in {lang}: {question}`.
 
-**Why:** RAG grounds the model in health-domain knowledge from the training set, reducing
-hallucination and improving factual accuracy (LLM-judge metric).
+**Why:** RAG grounds generation in health-domain vocabulary from training set, reducing hallucination (better LLM-judge) and providing ROUGE-overlapping vocabulary.
 
-**Key finding from EDA:** ~18.8% of test IDs share a hash with training IDs (same topic cluster).
+**Outcome:** R1=0.3836, RL=0.3352. Significantly better than Exp 3/4 (5k no-RAG) and competitive with TF-IDF alone. RAG grounding helps LLM-judge (0.5460 vs 0.4863 for NLLB alone).
 
-**Outcome:** Expected improved LLM-judge scores; ROUGE may also improve if retrieved answer
-contains relevant vocabulary for the generated answer.
-
-**Insight:** Retrieval quality is critical — per-language TF-IDF retrieval outperforms global.
+**Insight:** RAG improves generation quality for mT5-base when full training data is used. The retrieved context acts as a domain anchor preventing off-topic generation.
 
 ---
 
-## Experiment 9 — NLLB-600M + RAG Context
+## Experiment 7 — NLLB-600M + TF-IDF RAG (Top-3 Context)
 
 | Field | Value |
 |-------|-------|
 | Model | facebook/nllb-200-distilled-600M |
-| RAG | TF-IDF per-language top-1 retrieval |
-| Max input | 384 tokens |
+| RAG | TF-IDF per-language top-3 retrieved answers as context |
 | Epochs | 3 |
 | LR | 5e-5 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.3997 |
+| Val ROUGE-L | 0.3447 |
+| Zindi Score | 0.4610 (R1=0.4525, RL=0.3719, LLM=0.5999) |
+| Inflated | No |
 
-**What changed:** Combined NLLB-600M (best African language model) with TF-IDF RAG context.
+**What changed:** Combined NLLB-600M (best African language model) with TF-IDF top-3 RAG context.
 
-**Why:** NLLB provides better African language representations; RAG provides grounding in
-health-domain facts. Combining both is expected to maximize both ROUGE and LLM-judge scores.
+**Why:** NLLB's African language representations + RAG grounding should be complementary.
 
-**Outcome:** Expected to be the strongest single model — best of both approaches.
+**Outcome:** R1=0.3997, RL=0.3447. Best single-model result so far. LLM-judge=0.5999 — best yet, reflecting NLLB's strong language-appropriate generation quality when grounded.
 
-**Insight:** Model quality and retrieval grounding are complementary; combining them addresses
-different weaknesses (generation fluency vs factual grounding).
+**Insight:** Model quality and retrieval grounding address different weaknesses: NLLB handles fluency, RAG handles factual grounding. Combining them improves both ROUGE and LLM-judge.
 
 ---
 
-## Experiment 10 — Best Architecture on Train+Val Combined
+## Experiment 8 — NLLB-600M + TF-IDF RAG (Top-1 Context)
 
 | Field | Value |
 |-------|-------|
-| Model | Best from Exp 4–9 (auto-selected by ROUGE-L) |
-| Train data | 36,501 (Train + Val) |
+| Model | facebook/nllb-200-distilled-600M |
+| RAG | TF-IDF per-language top-1 retrieved answer |
 | Epochs | 3 |
 | LR | 5e-5 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.4014 |
+| Val ROUGE-L | 0.3462 |
+| Zindi Score | 0.4607 (R1=0.4534, RL=0.3725, LLM=0.5967) |
+| Inflated | No |
 
-**What changed:** Combined training and validation sets; used best-performing architecture from
-Exp 4–9 as determined by the experiment log.
+**What changed:** Same as Exp 7 but top-1 retrieved context instead of top-3 to reduce noise.
 
-**Why:** More training data = better generalization; standard competition practice before
-final submission.
+**Why:** Three retrieved answers may introduce conflicting vocabulary and hurt generation coherence.
 
-**Outcome:** Expected +1–3 ROUGE points improvement from 22% more training data.
+**Outcome:** R1=0.4014 (+0.0017 over Exp 7). Top-1 context slightly better — one focused context is cleaner than three concatenated answers.
 
-**Insight:** The 6,686 additional validation examples make a meaningful difference,
-especially for underrepresented languages (Amharic +462, Swahili +518).
+**Insight:** For seq2seq generation, a single high-quality retrieved context outperforms multiple noisy ones. Context noise at inference hurts generation coherence.
 
 ---
 
-## Experiment 11 — Beam Search & Length Penalty Tuning
+## Experiment 9 — NLLB-1.3B + RAG Train+Val Combined ⚠ INFLATED
 
 | Field | Value |
 |-------|-------|
-| Model | Best checkpoint from Exp 10 (no retraining) |
-| Tested configs | beam=4/8, length_penalty=0.8/1.0/1.5 |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Model | facebook/nllb-200-distilled-1.3B |
+| Train data | Train + Val combined (36,500 rows) |
+| Val ROUGE-1 | 0.9331 |
+| Val ROUGE-L | 0.9298 |
+| Zindi Score | 0.4800 (R1=0.4752, RL=0.3979, LLM=0.6038) |
+| Inflated | **YES — val rows were in retrieval corpus** |
 
-**What changed:** Varied inference-time beam search parameters without retraining.
+**What changed:** Scaled to NLLB-1.3B (larger model) and trained on Train+Val combined.
 
-**Why:** Beam width and length penalty control the length-quality trade-off at inference time.
-Longer answers may score higher on ROUGE (more overlap) but risk padding.
+**Why:** More parameters + more training data should improve generalization.
 
-**Outcome:** Beam=8, length_penalty=1.0 expected to be optimal; strong length penalty can hurt quality.
+**Outcome:** Local ROUGE artificially high (0.93) because validation questions were inside the retrieval corpus — model retrieves its own validation answers. Zindi score 0.4800 is the true measure.
 
-**Insight:** Inference hyperparameters are a free performance boost — always tune them.
+**Insight:** Always exclude validation set from the retrieval corpus during local evaluation. Contamination creates misleading local metrics.
 
 ---
 
-## Experiment 12 — Length-Preference Ensemble (Top-2 Models)
+## Experiment 10 — Beam Search Inference Tuning ⚠ INFLATED
 
 | Field | Value |
 |-------|-------|
-| Components | Top-2 models by validation ROUGE-L (auto-selected) |
-| Strategy | Select longer non-trivial answer (>5 words) |
-| Val ROUGE-1 | TBD |
-| Val ROUGE-L | TBD |
+| Model | NLLB-1.3B checkpoint from Exp 9 |
+| Tested configs | beam=1/2/4/8, length_penalty=0.8/1.0/1.5 |
+| Val ROUGE-1 | 0.8299 |
+| Val ROUGE-L | 0.8241 |
+| Zindi Score | Not submitted |
+| Inflated | **YES — same corpus contamination as Exp 9** |
 
-**What changed:** Combined predictions from the two best-scoring experiments at inference time.
+**What changed:** Inference-only sweep over beam width and length penalty. No retraining.
 
-**Why:** Top models have complementary strengths — RAG-based models provide grounded context;
-full-data models have better general language understanding. Their failures are different.
+**Why:** Beam width and length penalty are free inference-time hyperparameters affecting generation length and quality.
 
-**Outcome:** Expected marginal improvement over individual models; low-risk improvement.
+**Outcome:** beam=4 selected as optimal. Local ROUGE inflated due to corpus contamination inherited from Exp 9. beam=8 overfits to verbatim retrieval; beam=4 balances quality vs diversity.
 
-**Insight:** Simple ensembles often outperform individual models with no additional training cost.
+**Insight:** Always tune inference hyperparameters after training — they are a zero-cost performance boost. But always evaluate on a clean held-out set.
 
 ---
 
-## Summary Table (to be filled after running experiments)
+## Experiment 11 — Dense Retrieval with E5-Large (Train Corpus Only)
 
-| Exp | Name | ROUGE-1 | ROUGE-L | Weighted | Leaderboard |
-|-----|------|---------|---------|----------|-------------|
-| 1 | TF-IDF Global | 0.4276 | 0.3740 | 0.2966* | 0.4945 (R1=0.4819 RL=0.4046 LLM=0.6402) |
-| 2 | TF-IDF Per-Lang | 0.4269 | 0.3734 | 0.2961* | 0.4937 (R1=0.4784 RL=0.4009 LLM=0.6475) |
-| 3 | mT5-small Vanilla | - | - | - | - |
-| 4 | mT5-base Vanilla | - | - | - | - |
-| 5 | mT5-base Prompt-v2 | - | - | - | - |
-| 6 | NLLB-600M Fine-tune | - | - | - | - |
-| 7 | mT5-base LoRA r=16 | - | - | - | - |
-| 8 | mT5-base RAG | - | - | - | - |
-| 9 | NLLB-600M + RAG | - | - | - | - |
-| 10 | Best Arch Train+Val | - | - | - | - |
-| 11 | Beam Tuning | - | - | - | - |
-| 12 | Ensemble Top-2 | - | - | - | - |
+| Field | Value |
+|-------|-------|
+| Model | intfloat/multilingual-e5-large |
+| Retrieval | Dense cosine similarity, top-1 |
+| Corpus | 29,815 training rows only |
+| Val ROUGE-1 | 0.4526 |
+| Val ROUGE-L | 0.4098 |
+| Zindi Score | 0.5424 (R1=0.5080, RL=0.4430, LLM=0.7328) |
+| Inflated | No |
 
-*Weighted scores marked with * exclude LLM-as-a-Judge (set to 0 in local eval).
-Full competition score = 0.37×ROUGE-1 + 0.37×ROUGE-L + 0.26×LLM-judge.
+**What changed:** Replaced TF-IDF with dense vector retrieval using multilingual-e5-large embeddings.
+
+**Why:** Dense embeddings capture semantic similarity beyond surface character n-grams, especially important for paraphrased health questions.
+
+**Outcome:** R1=0.4526, RL=0.4098 — best clean ROUGE so far. Zindi=0.5424. LLM-judge=0.7328 — major jump from TF-IDF (0.64) showing dense retrieval returns more contextually appropriate answers.
+
+**Insight:** Semantic similarity matching fundamentally outperforms lexical matching for health QA. Dense retrieval is the key breakthrough in this experiment sequence.
+
+---
+
+## Experiment 12 — Dense E5-Large (Train+Val Corpus) ⚠ INFLATED
+
+| Field | Value |
+|-------|-------|
+| Model | intfloat/multilingual-e5-large |
+| Corpus | 36,501 rows (Train + Val) |
+| Val ROUGE-1 | 0.9685 |
+| Val ROUGE-L | 0.9677 |
+| Zindi Score | 0.5552 (R1=0.5244, RL=0.4602, LLM=0.7344) |
+| Inflated | **YES — val rows were in retrieval corpus** |
+
+**What changed:** Expanded corpus to include validation rows.
+
+**Why:** More corpus rows = better coverage for retrieval.
+
+**Outcome:** Local ROUGE near-perfect (0.97) due to contamination — each validation question retrieves itself. Zindi=0.5552 is the real score.
+
+**Insight:** Confirmed that corpus contamination creates near-1.0 local ROUGE. The true benefit of a larger corpus is modest (+0.013 on Zindi vs Exp 11).
+
+---
+
+## Experiment 13 — Language-Specific Hybrid Retrieval ⚠ INFLATED
+
+| Field | Value |
+|-------|-------|
+| Model | E5-large (English + Swahili) + TF-IDF (Akan + Amharic + Luganda) |
+| Corpus | 36,501 rows |
+| Val ROUGE-1 | 0.7267 |
+| Val ROUGE-L | 0.7018 |
+| Zindi Score | 0.5793 (R1=0.5598, RL=0.4893, LLM=0.7353) — highest overall |
+| Inflated | **YES — val rows in corpus for some subsets** |
+
+**What changed:** Different retrieval strategies per language: dense E5 for English and Swahili (large training data), TF-IDF for Akan, Amharic, and Luganda (smaller training data, specialized scripts).
+
+**Why:** Dense retrieval requires sufficient training examples per language to build a useful embedding space. Low-resource languages may benefit from char-level TF-IDF instead.
+
+**Outcome:** Zindi=0.5793 — highest score across all experiments, but inflated. Language-specific routing does improve results for low-resource subsets.
+
+**Insight:** One-size-fits-all retrieval is suboptimal. High-resource languages benefit from dense retrieval; low-resource languages may still be better served by character-level retrieval.
+
+---
+
+## Experiment 14 — Dense E5 + BGE Cross-Encoder Reranker ⚠ INFLATED
+
+| Field | Value |
+|-------|-------|
+| Model | E5-large retriever + BAAI/bge-reranker cross-encoder |
+| Strategy | Retrieve top-20, rerank to top-1 |
+| Corpus | 36,501 rows |
+| Val ROUGE-1 | 0.6542 |
+| Val ROUGE-L | 0.6267 |
+| Zindi Score | 0.5245 (R1=0.4948, RL=0.4107, LLM=0.7289) |
+| Inflated | **YES — val rows in corpus** |
+
+**What changed:** Added a cross-encoder reranker on top of dense retrieval: retrieve top-20 candidates, rerank by cross-attention relevance score, select top-1.
+
+**Why:** Bi-encoder retrieval (E5) is fast but uses independent query/document encodings. Cross-encoder reranking jointly encodes query+document for more precise relevance scoring.
+
+**Outcome:** Zindi=0.5245 — lower than E5 alone (0.5424 in Exp 11). Reranker adds inference overhead but doesn't improve final scores. The cross-encoder may be over-selecting for lexical match over semantic fit.
+
+**Insight:** Cross-encoder reranking doesn't necessarily improve over strong bi-encoder retrieval for this task. The overhead may not be justified; BGE-M3's unified dense model (Exp 15) is a better trade-off.
+
+---
+
+## Experiment 15 — BGE-M3 Dense Retrieval (Clean) ✅ BEST CLEAN
+
+| Field | Value |
+|-------|-------|
+| Model | BAAI/bge-m3 |
+| Corpus | 29,815 training rows only (val excluded) |
+| Val ROUGE-1 | 0.4761 |
+| Val ROUGE-L | 0.4278 |
+| Zindi Score | **0.5608** (R1=0.5345, RL=0.4627, LLM=0.7379) |
+| Inflated | No |
+
+**What changed:** Replaced E5-large with BGE-M3 — a unified retrieval model supporting dense, sparse, and multi-vector retrieval trained specifically for cross-lingual retrieval tasks.
+
+**Why:** BGE-M3 is trained on more languages and retrieval-specific objectives vs E5-large (which is primarily a text embedding model). Better suited for multilingual health QA.
+
+**Outcome:** R1=0.4761, RL=0.4278, Zindi=0.5608 — **best clean score across all experiments**. LLM-judge=0.7379 (highest of any clean experiment). BGE-M3 outperforms E5-large by +0.0184 on Zindi.
+
+**Insight:** Model architecture matters even for retrieval-only approaches. BGE-M3's multilingual retrieval pre-training gives superior cross-lingual alignment vs general-purpose text embeddings.
+
+---
+
+## Experiment 16 — NLLB-600M + Hybrid RAG (LoRA)
+
+| Field | Value |
+|-------|-------|
+| Model | facebook/nllb-200-distilled-600M + LoRA r=16 |
+| RAG | E5-large (English + Swahili) + TF-IDF (Akan + Amharic + Luganda) |
+| Epochs | 1 |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.4594 |
+| Val ROUGE-L | 0.4085 |
+| Zindi Score | 0.5279 (R1=0.5210, RL=0.4448, LLM=0.6558) |
+| Inflated | No |
+
+**What changed:** Combined NLLB-600M with LoRA PEFT and the language-specific hybrid RAG from Exp 13, using only the training corpus (no contamination).
+
+**Why:** LoRA reduces trainable params (~1% of model) allowing efficient fine-tuning with RAG context. Hybrid RAG provides language-appropriate retrieval strategy.
+
+**Outcome:** Zindi=0.5279 — good but below BGE-M3 pure retrieval (0.5608). Generation overhead doesn't recover the gap vs dense retrieval alone after just 1 epoch.
+
+**Insight:** Fine-tuning with RAG requires more epochs to converge than pure retrieval. The generation step introduces variance that outweighs the grounding benefit at 1 epoch.
+
+---
+
+## Experiment 17 — NLLB-1.3B + LoRA + Hybrid RAG
+
+| Field | Value |
+|-------|-------|
+| Model | facebook/nllb-200-distilled-1.3B + LoRA r=16 |
+| RAG | E5-large (English + Swahili) + TF-IDF (Akan + Amharic + Luganda) |
+| Trainable params | ~4.7M / 1.37B (0.34%) |
+| Epochs | 3 |
+| Train data | 29,814 rows |
+| Val ROUGE-1 | 0.4491 |
+| Val ROUGE-L | 0.3979 |
+| Zindi Score | 0.5178 (R1=0.5112, RL=0.4338, LLM=0.6469) |
+| Inflated | No |
+
+**What changed:** Scaled to NLLB-1.3B with LoRA r=16 and full 3-epoch training. Hybrid RAG from Exp 13 on clean train-only corpus.
+
+**Why:** Larger model capacity should improve generation quality over 600M. LoRA makes 1.3B feasible on T4 GPU memory.
+
+**Outcome:** Zindi=0.5178 — lower than 600M variant (Exp 16, 0.5279) and below BGE-M3 (0.5608). Larger model with limited epochs may underfit; LoRA with r=16 on 1.3B may need higher alpha or more epochs.
+
+**Insight:** Scaling model size alone doesn't guarantee improvement when training budget (epochs, data) is fixed. BGE-M3 dense retrieval remains the strongest approach for this task within T4 GPU constraints.
+
+---
+
+## Summary Table
+
+| Exp | Name | ROUGE-1 | ROUGE-L | Zindi | Notes |
+|-----|------|---------|---------|-------|-------|
+| 1 | TF-IDF Global | 0.4276 | 0.3740 | 0.4945 | Baseline |
+| 2 | TF-IDF Per-Language | 0.4269 | 0.3734 | 0.4937 | |
+| 3 | mT5-base Vanilla 5k | 0.1207 | 0.1029 | — | Not submitted |
+| 4 | mT5-base Prompt-v2 5k | 0.1231 | 0.1065 | — | Not submitted |
+| 5 | NLLB-600M Full Data | 0.2890 | 0.2216 | 0.3471 | |
+| 6 | mT5-base + TF-IDF RAG | 0.3836 | 0.3352 | 0.4356 | |
+| 7 | NLLB-600M + RAG top-3 | 0.3997 | 0.3447 | 0.4610 | |
+| 8 | NLLB-600M + RAG top-1 | 0.4014 | 0.3462 | 0.4607 | |
+| 9 ⚠ | NLLB-1.3B + RAG Train+Val | 0.9331 | 0.9298 | 0.4800 | Inflated local |
+| 10 ⚠ | Beam Search Tuning | 0.8299 | 0.8241 | — | Inflated, not submitted |
+| 11 | Dense E5-large (train only) | 0.4526 | 0.4098 | 0.5424 | |
+| 12 ⚠ | Dense E5-large (train+val) | 0.9685 | 0.9677 | 0.5552 | Inflated local |
+| 13 ⚠ | Language-Specific Hybrid | 0.7267 | 0.7018 | 0.5793 | Inflated local |
+| 14 ⚠ | Dense E5 + BGE Reranker | 0.6542 | 0.6267 | 0.5245 | Inflated local |
+| **15** | **BGE-M3 Dense (clean)** | **0.4761** | **0.4278** | **0.5608** | **Best clean score** |
+| 16 | NLLB-600M + Hybrid RAG LoRA | 0.4594 | 0.4085 | 0.5279 | |
+| 17 | NLLB-1.3B + LoRA + Hybrid RAG | 0.4491 | 0.3979 | 0.5178 | |
+
+**Best clean Zindi score: Exp 15 — BGE-M3 Dense Retrieval → 0.5608**  
+**Final submission: Exp 15 (primary), Exp 11 (backup)**
