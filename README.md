@@ -68,10 +68,11 @@ Key findings from EDA (see `notebooks/01_EDA_Preprocessing.ipynb`):
 │   ├── 01_EDA_Preprocessing.ipynb       # Exploratory data analysis and preprocessing
 │   └── 02_Training_Experiments.ipynb    # All 17 experiments with results and demo
 ├── src/
-│   ├── __init__.py
+│   ├── __init__.py                      # Package entry point — exports all public names
 │   ├── data_utils.py                    # Data loading, cleaning, prompt construction
 │   ├── evaluation.py                    # ROUGE evaluation with whitespace tokenizer
-│   └── model_utils.py                   # Model loading, LoRA, training args, inference
+│   ├── model_utils.py                   # Model loading, LoRA, training args, inference
+│   └── retrieval_utils.py               # TF-IDF, dense retrieval, reranker, hybrid retrieval
 ├── experiments/
 │   └── experiment_log.md                # Detailed log of all 17 experiments
 ├── outputs/
