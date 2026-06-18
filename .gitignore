@@ -1,5 +1,13 @@
 # Data files (download from Zindi)
 data/
+multilingual-health-question-answering*/
+**/SampleSubmission.csv
+**/Train.csv
+**/Val.csv
+**/Test.csv
+
+# Duplicate notebooks
+*copy*.ipynb
 
 # Checkpoints and large model files
 outputs/checkpoints/
