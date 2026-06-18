@@ -1,0 +1,18 @@
+exp,name,rouge1,rougeL,zindi
+13,Language-Specific Hybrid,0.7267,0.7018,0.5793
+15,Dense BGE-M3 (train corpus),0.4761,0.4278,0.5608
+12,Dense E5-large (train+val corpus),0.9685,0.9677,0.5552
+11,Dense E5-large (train corpus),0.4526,0.4098,0.5424
+16,NLLB-600M + Hybrid RAG,0.4594,0.4085,0.5279
+14,Dense E5 + BGE Reranker,0.6542,0.6267,0.5245
+17,NLLB-1.3B + LoRA + Hybrid RAG,0.4491,0.3979,0.5178
+1,TF-IDF Global Retrieval,0.4276,0.374,0.4945
+2,TF-IDF Per-Language Retrieval,0.4269,0.3734,0.4937
+9,NLLB-1.3B + RAG Train+Val,0.9331,0.9298,0.48
+7,NLLB-600M top-3 RAG,0.3997,0.3447,0.461
+8,NLLB-600M top-1 RAG,0.4014,0.3462,0.4607
+6,mT5-base + TF-IDF RAG,0.3836,0.3352,0.4356
+5,NLLB-600M Fine-tune,0.289,0.2216,0.3471
+3,mT5-base Vanilla Fine-tune 5k,0.1207,0.1029,
+4,mT5-base Prompt-v2 Fine-tune 5k,0.1231,0.1065,
+10,Beam Search Tuning (beam4 wins),0.8299,0.8241,

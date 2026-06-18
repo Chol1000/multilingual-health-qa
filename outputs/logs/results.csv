@@ -1,0 +1,2 @@
+exp,name,rouge1,rougeL,weighted,notes
+17,NLLB-1.3B + LoRA + E5-large Hybrid RAG,0.4491,0.3979,0.3134,NLLB-1.3B; LoRA r=16; E5-large Eng+Swa + TF-IDF Aka+Amh+Lug; 3 epochs

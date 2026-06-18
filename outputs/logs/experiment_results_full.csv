@@ -1,0 +1,18 @@
+exp,name,rouge1,rougeL,zindi,zindi_r1,zindi_rl,zindi_llm,notes,type,model,inflated
+1,TF-IDF Global Retrieval,0.4276,0.374,0.4945,0.4819,0.4046,0.6402,"char_wb 3-5 gram, single global index",Retrieval,TF-IDF,False
+2,TF-IDF Per-Language Retrieval,0.4269,0.3734,0.4937,0.4784,0.4009,0.6475,separate index per language,Retrieval,TF-IDF,False
+3,mT5-base Vanilla Fine-tune 5k,0.1207,0.1029,,,,,"580M params, 5k sample, 3 epochs — not submitted",Fine-tuning,mT5-base,False
+4,mT5-base Prompt-v2 Fine-tune 5k,0.1231,0.1065,,,,,"instructional prompt, 5k sample — not submitted",Fine-tuning,mT5-base,False
+5,NLLB-600M Fine-tune,0.289,0.2216,0.3471,0.3457,0.2508,0.4863,"full train 29814 rows, 3 epochs",Fine-tuning,NLLB-600M,False
+6,mT5-base + TF-IDF RAG,0.3836,0.3352,0.4356,0.4327,0.3608,0.546,full train + RAG grounding,Fine-tuning+RAG,mT5-base,False
+7,NLLB-600M top-3 RAG,0.3997,0.3447,0.461,0.4525,0.3719,0.5999,NLLB + top-3 retrieved context,Fine-tuning+RAG,NLLB-600M,False
+8,NLLB-600M top-1 RAG,0.4014,0.3462,0.4607,0.4534,0.3725,0.5967,NLLB + top-1 retrieved context,Fine-tuning+RAG,NLLB-600M,False
+9,NLLB-1.3B + RAG Train+Val,0.9331,0.9298,0.48,0.4752,0.3979,0.6038,local val inflated — val rows in retrieval corpus,Fine-tuning+RAG,NLLB-1.3B,True
+10,Beam Search Tuning (beam4 wins),0.8299,0.8241,,,,,inference-only sweep; beam4 selected; not submitted,Inference Tuning,NLLB-1.3B,True
+11,Dense E5-large (train corpus),0.4526,0.4098,0.5424,0.508,0.443,0.7328,"multilingual-e5-large, 29815 rows",Retrieval,E5-large,False
+12,Dense E5-large (train+val corpus),0.9685,0.9677,0.5552,0.5244,0.4602,0.7344,local val inflated — val rows in retrieval corpus,Retrieval,E5-large,True
+13,Language-Specific Hybrid,0.7267,0.7018,0.5793,0.5598,0.4893,0.7353,Dense E5 Eng+Swa; TF-IDF Akan+Amh+Lug — local val partially inflated,Retrieval,E5-large + TF-IDF Hybrid,True
+14,Dense E5 + BGE Reranker,0.6542,0.6267,0.5245,0.4948,0.4107,0.7289,top-20 + cross-encoder reranker — local val inflated,Retrieval,E5-large + BGE Reranker,True
+15,Dense BGE-M3 (train corpus),0.4761,0.4278,0.5608,0.5345,0.4627,0.7379,"BAAI/bge-m3, 29815 rows",Retrieval,BGE-M3,False
+16,NLLB-600M + Hybrid RAG,0.4594,0.4085,0.5279,0.521,0.4448,0.6558,E5-large Eng+Swa + TF-IDF rest; 1 epoch; train-only corpus,Fine-tuning+RAG,NLLB-600M + LoRA,False
+17,NLLB-1.3B + LoRA + Hybrid RAG,0.4491,0.3979,0.5178,0.5112,0.4338,0.6469,LoRA r=16; 4.7M/1.37B params; E5 Eng+Swa + TF-IDF rest; 3 epochs,Fine-tuning+RAG,NLLB-1.3B + LoRA,False

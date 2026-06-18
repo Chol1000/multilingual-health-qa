@@ -1,0 +1,9 @@
+subset,n_samples,mean_q_words,mean_ans_words,median_ans_words,max_ans_words,language
+Aka_Gha,4455,28.8,105.6,100.0,458,Akan
+Amh_Eth,1845,9.5,20.2,19.0,106,Amharic
+Eng_Eth,3915,12.2,24.5,24.0,118,English
+Eng_Gha,4443,20.0,75.1,70.0,408,English
+Eng_Ken,2080,11.4,78.7,64.0,315,English
+Eng_Uga,7623,11.2,95.4,73.0,482,English
+Lug_Uga,3383,10.5,79.7,68.0,331,Luganda
+Swa_Ken,2070,11.2,84.3,66.0,345,Swahili
