@@ -5,7 +5,10 @@
 **Competition:** Zindi — Multilingual Health Question Answering in Low-Resource African Languages  
 **Task:** Generate accurate, fluent health answers to questions across five African languages  
 **Evaluation Metric:** ROUGE-1 F1 x 0.37 + ROUGE-L F1 x 0.37 + LLM-as-a-Judge x 0.26  
-**Best Leaderboard Score:** 0.5608 (Experiment 15 — BGE-M3 Dense Retrieval)
+**Final Rank:** 184 / 1,585 participants (top 11.6%) — Private Score: 0.564471 | Public Score: 0.579345  
+**Best Clean Score:** 0.5608 (Experiment 15 — BGE-M3 Dense Retrieval)
+
+![Zindi Final Leaderboard](outputs/figures/Zindi%20Leaderboard.png)
 
 ---
 
@@ -28,7 +31,7 @@
 
 This repository contains the full research pipeline for the Zindi *Multilingual Health Question Answering in Low-Resource African Languages* competition. The task requires building a system that can answer health questions in five languages — Akan, Amharic, English, Luganda, and Swahili — across eight language-country subsets.
 
-The project progressed through 17 systematic experiments, moving from TF-IDF retrieval baselines through fine-tuned sequence-to-sequence generation (mT5, NLLB), parameter-efficient fine-tuning with LoRA, retrieval-augmented generation (RAG), and finally dense neural retrieval using multilingual embeddings (E5-large, BGE-M3). The best clean leaderboard score of 0.5608 was achieved using BGE-M3 dense retrieval with the training corpus only, representing a 13.5% improvement over the TF-IDF baseline (0.4945).
+The project progressed through 17 systematic experiments, moving from TF-IDF retrieval baselines through fine-tuned sequence-to-sequence generation (mT5, NLLB), parameter-efficient fine-tuning with LoRA, retrieval-augmented generation (RAG), and finally dense neural retrieval using multilingual embeddings (E5-large, BGE-M3). The best clean leaderboard score of 0.5608 was achieved using BGE-M3 dense retrieval with the training corpus only, representing a 13.4% improvement over the TF-IDF baseline (0.4945).
 
 ---
 
@@ -110,6 +113,12 @@ Full details for every experiment, including per-language breakdowns, hyperparam
 ---
 
 ## 5. Key Results
+
+### Final Leaderboard Standing (Private Leaderboard — June 22, 2026)
+
+![Zindi Final Leaderboard](outputs/figures/Zindi%20Leaderboard.png)
+
+**Rank 184 / 1,585 participants (top 11.6%)** — Private: 0.564471 (ROUGE-1=0.5414, ROUGE-L=0.4675, LLM-Judge=0.7353)
 
 ### Leaderboard Score Progression
 
