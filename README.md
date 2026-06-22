@@ -1,6 +1,6 @@
 # Multilingual Health Question Answering in Low-Resource African Languages
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Chol1000/multilingual-health-qa/blob/main/notebooks/02_Training_Experiments.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Chol1000/multilingual-health-qa/blob/main/notebooks/02_Training_Experiments.ipynb)  [![Open In Colab (Drive)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1w0fM1USsUUbM94Vs9Izp7CqPNWCUmVOG)
 
 **Competition:** Zindi — Multilingual Health Question Answering in Low-Resource African Languages  
 **Task:** Generate accurate, fluent health answers to questions across five African languages  
